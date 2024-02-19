@@ -1,0 +1,162 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import copy
+import math
+
+X_train = np.array(([34.62365962, 78.02469282],
+ [30.28671077, 43.89499752],
+ [35.84740877, 72.90219803],
+ [60.18259939, 86.3085521 ],
+ [79.03273605, 75.34437644]))
+
+y_train = np.array([0., 0., 0., 1., 1.])
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def compute_cost(X, y, w, b, *argv):
+    """
+    Computes the cost over all examples
+    Args:
+      X : (ndarray Shape (m,n)) data, m examples by n features
+      y : (ndarray Shape (m,))  target value 
+      w : (ndarray Shape (n,))  values of parameters of the model      
+      b : (scalar)              value of bias parameter of the model
+      *argv : unused, for compatibility with regularized version below
+    Returns:
+      total_cost : (scalar) cost 
+    """
+
+    m, n = X.shape
+    
+    ### START CODE HERE ###
+    
+    z = np.dot(X, w) + b
+    f = sigmoid(z)
+    cost = 0
+    
+    for i in range(m):
+        loss = -y[i] * math.log(f[i]) - (1 - y[i]) * math.log(1 - f[i])
+        cost += loss
+    total_cost = cost / m
+        
+    
+    ### END CODE HERE ### 
+
+    return total_cost
+
+def compute_gradient(X, y, w, b, *argv): 
+    """
+    Computes the gradient for logistic regression 
+ 
+    Args:
+      X : (ndarray Shape (m,n)) data, m examples by n features
+      y : (ndarray Shape (m,))  target value 
+      w : (ndarray Shape (n,))  values of parameters of the model      
+      b : (scalar)              value of bias parameter of the model
+      *argv : unused, for compatibility with regularized version below
+    Returns
+      dj_dw : (ndarray Shape (n,)) The gradient of the cost w.r.t. the parameters w. 
+      dj_db : (scalar)             The gradient of the cost w.r.t. the parameter b. 
+    """
+    m, n = X.shape
+    dj_dw = np.zeros(w.shape)
+    dj_db = 0.
+
+    ### START CODE HERE ### 
+    for i in range(m):
+        z_wb = np.dot(w, X[i, :]) + b
+        f = sigmoid(z_wb)
+        error = f - y[i]
+        dj_db += error# Her sample için bias gradienti toplandı
+        dj_dw += error * X[i, :] # Her sample için weight gradienti tek bir vektöre toplandı
+
+    dj_db /= m
+    dj_dw /= m
+    ### END CODE HERE ###
+    return dj_db, dj_dw
+
+def predict(X, w, b, threshold=0.5): 
+    """
+    Predict whether the label is 0 or 1 using learned logistic
+    regression parameters w
+    
+    Args:
+      X : (ndarray Shape (m,n)) data, m examples by n features
+      w : (ndarray Shape (n,))  values of parameters of the model      
+      b : (scalar)              value of bias parameter of the model
+
+    Returns:
+      p : (ndarray (m,)) The predictions for X using a threshold at 0.5
+    """
+    # number of training examples
+    m, n = X.shape   
+    p = np.zeros(m)
+    
+    z = np.dot(X, w) + b
+    f = sigmoid(z)
+    p = [1 if i >= threshold else 0 for i in f]
+    p = np.array(p)
+    
+    
+    return p
+
+def compute_cost_reg(X, y, w, b, lambda_ = 1):
+    """
+    Computes the cost over all examples
+    Args:
+      X : (ndarray Shape (m,n)) data, m examples by n features
+      y : (ndarray Shape (m,))  target value 
+      w : (ndarray Shape (n,))  values of parameters of the model      
+      b : (scalar)              value of bias parameter of the model
+      lambda_ : (scalar, float) Controls amount of regularization
+    Returns:
+      total_cost : (scalar)     cost 
+    """
+
+    m, n = X.shape
+    
+    # Calls the compute_cost function that you implemented above
+    cost_without_reg = compute_cost(X, y, w, b) 
+    
+    # You need to calculate this value
+    reg_cost = 0.
+    
+    ### START CODE HERE ###
+    
+    for i in range(n):
+        reg_cost += w[i]**2
+    reg_cost = reg_cost * lambda_ / 2 / m
+        
+    ### END CODE HERE ### 
+    
+    # Add the regularization cost to get the total cost
+    total_cost = cost_without_reg + reg_cost
+
+    return total_cost
+
+def compute_gradient_reg(X, y, w, b, lambda_ = 1): 
+    """
+    Computes the gradient for logistic regression with regularization
+ 
+    Args:
+      X : (ndarray Shape (m,n)) data, m examples by n features
+      y : (ndarray Shape (m,))  target value 
+      w : (ndarray Shape (n,))  values of parameters of the model      
+      b : (scalar)              value of bias parameter of the model
+      lambda_ : (scalar,float)  regularization constant
+    Returns
+      dj_db : (scalar)             The gradient of the cost w.r.t. the parameter b. 
+      dj_dw : (ndarray Shape (n,)) The gradient of the cost w.r.t. the parameters w. 
+
+    """
+    m, n = X.shape
+    
+    dj_db, dj_dw = compute_gradient(X, y, w, b)
+
+    ### START CODE HERE ###     
+    dj_dw += w * lambda_ / m
+        
+    ### END CODE HERE ###         
+        
+    return dj_db, dj_dw
